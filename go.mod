@@ -4,14 +4,15 @@ go 1.21.4
 
 require (
 	github.com/chenzhijie/go-web3 v0.0.0-20230921142927-cd8f05f8d203
+	github.com/ethereum/go-ethereum v1.10.26
 	github.com/joho/godotenv v1.5.1
+	github.com/jordan-wright/email v4.0.1-0.20210109023952-943e75fe5223+incompatible
 )
 
 require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.2.0 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
-	github.com/ethereum/go-ethereum v1.10.26 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/klauspost/compress v1.15.9 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
