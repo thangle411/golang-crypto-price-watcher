@@ -1,7 +1,7 @@
 # golang-crypto-price-watcher
 
-Provide .env in the below format  
-COINGECKO*URL=https://api.coingecko.com/api/v3  
-GMAIL_RECEIVER_EMAIL=\*\*\_your receiver email goes here***
-GMAIL_APP_PASSWORD=**_your app password goes here_**  
-GMAIL_FROM_EMAIL=**_your sender email goes here_\*\*
+Setup .env in the below format if you don't want to manually provide inputs for email functionality
+
+- GMAIL\*RECEIVER_EMAIL=**your receiver email goes here**
+- GMAIL_APP_PASSWORD=\*\*\_your app password goes here\*\*\*
+- GMAIL_FROM_EMAIL=\*\*your sender email goes here\*\*
