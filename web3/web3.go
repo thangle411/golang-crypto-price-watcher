@@ -10,7 +10,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/thangle411/golang-web3-price-watcher/coingecko"
 	"github.com/thangle411/golang-web3-price-watcher/constants"
-	"github.com/thangle411/golang-web3-price-watcher/email"
 	"github.com/thangle411/golang-web3-price-watcher/pools"
 )
 
@@ -42,7 +41,7 @@ type Slot0Response struct {
 	Unlocked                   bool
 }
 
-func Start(receiverEmail string, senderEmail string, appPassword string) {
+func Start(receiverEmail string, senderEmail string, appPassword string) (html string, subject string) {
 	ethPrice := coingecko.GetTickerPrice("ethereum")
 	if ethPrice == nil {
 		fmt.Println("Failed getting price from coingecko, setting it as 0")
@@ -64,7 +63,7 @@ func Start(receiverEmail string, senderEmail string, appPassword string) {
 			denomPrice = 1
 		}
 		wg.Add(1)
-		go WatchPool(denomPrice, pool, infoChannel, &wg)
+		go watchPool(denomPrice, pool, infoChannel, &wg)
 	}
 
 	go func() {
@@ -73,35 +72,24 @@ func Start(receiverEmail string, senderEmail string, appPassword string) {
 	}()
 
 	htmlString := ""
-	subject := ""
+	subjectString := ""
 	for pool := range infoChannel {
 		fmt.Println(pool)
 		if pool.SendEmail {
 			htmlString += fmt.Sprintf(`
-			<div>%s is $%f</div>
-			<div>There is %f %s and %f %s in the pool</div>
+			<br></br>
+			<li>%s is $%f</li>
+			<li>There is %f %s and %f %s in the pool</li>
 			`, pool.Token.Name, pool.Price, pool.Denominator.Balance, pool.Denominator.Name, pool.Token.Balance, pool.Token.Name)
-			subject += pool.Token.Name
+			subjectString += pool.Token.Name + " - "
 		}
 		fmt.Println("--------------------------------------")
 	}
 
-	if htmlString != "" {
-		fmt.Println("Emailing...")
-		err := email.SendEmail(subject, htmlString, email.Email{
-			AppEmail:    senderEmail,
-			AppPassword: appPassword,
-			ToEmail:     []string{receiverEmail},
-		})
-		if err != nil {
-			fmt.Println("Failed sending email!", err)
-		}
-		htmlString = ""
-		subject = ""
-	}
+	return htmlString, subjectString
 }
 
-func WatchPool(denomPrice float64, pool *pools.Pool, infoChannel chan PoolInfo, wg *sync.WaitGroup) {
+func watchPool(denomPrice float64, pool *pools.Pool, infoChannel chan PoolInfo, wg *sync.WaitGroup) {
 	defer wg.Done()
 	web3, err := web3.NewWeb3(pool.RPC)
 	if err != nil {

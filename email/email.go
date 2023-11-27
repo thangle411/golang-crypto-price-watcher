@@ -17,7 +17,7 @@ func SendEmail(subject string, htmlString string, emailConfig Email) error {
 	e.From = "Price Tracker <" + emailConfig.AppEmail + ">"
 	e.To = emailConfig.ToEmail
 	e.Subject = subject + " price changed"
-	e.HTML = []byte(htmlString)
+	e.HTML = []byte(`<ul>` + htmlString + `</ul>`)
 	return e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "golanglearner411@gmail.com", emailConfig.AppPassword, "smtp.gmail.com"))
 }
 

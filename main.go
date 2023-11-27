@@ -14,6 +14,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/thangle411/golang-web3-price-watcher/email"
+	"github.com/thangle411/golang-web3-price-watcher/web2"
 	"github.com/thangle411/golang-web3-price-watcher/web3"
 )
 
@@ -23,7 +24,21 @@ func main() {
 	receiverEmail, senderEmail, appPassword := setup()
 	for {
 		fmt.Println("------------RUNNING------------")
-		web3.Start(receiverEmail, senderEmail, appPassword)
+		html1, subject1 := web3.Start(receiverEmail, senderEmail, appPassword)
+		html2, subject2 := web2.Start(receiverEmail, senderEmail, appPassword)
+
+		if html1+html2 != "" {
+			fmt.Println("Emailing...")
+			err := email.SendEmail(subject1+" "+subject2, html1+" "+html2, email.Email{
+				AppEmail:    senderEmail,
+				AppPassword: appPassword,
+				ToEmail:     []string{receiverEmail},
+			})
+			if err != nil {
+				fmt.Println("Failed sending email!", err)
+			}
+		}
+
 		time.Sleep(5 * time.Minute)
 	}
 }
