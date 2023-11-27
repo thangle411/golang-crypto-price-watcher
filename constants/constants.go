@@ -6,6 +6,11 @@ var DenominatorAddress = map[string]string{
 	"USDC-ARB": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
 }
 
+var ChainsList = map[string]int64{
+	"ethereum": 1,
+	"arbitrum": 42161,
+}
+
 const TokenAbi = `[
 	{
 		"constant": true,

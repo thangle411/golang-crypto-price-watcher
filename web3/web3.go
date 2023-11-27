@@ -55,7 +55,8 @@ func Start(receiverEmail string, senderEmail string, appPassword string) {
 
 	infoChannel := make(chan PoolInfo)
 	var wg sync.WaitGroup
-	for _, pool := range pools.Pools {
+	for i := 0; i < len(pools.Pools); i++ {
+		pool := &pools.Pools[i]
 		var denomPrice float64
 		if pool.DenominatorName == "WETH" {
 			denomPrice = ethPrice["ethereum"].Usd
@@ -100,7 +101,7 @@ func Start(receiverEmail string, senderEmail string, appPassword string) {
 	}
 }
 
-func WatchPool(denomPrice float64, pool pools.Pool, infoChannel chan PoolInfo, wg *sync.WaitGroup) {
+func WatchPool(denomPrice float64, pool *pools.Pool, infoChannel chan PoolInfo, wg *sync.WaitGroup) {
 	defer wg.Done()
 	web3, err := web3.NewWeb3(pool.RPC)
 	if err != nil {
@@ -121,8 +122,7 @@ func WatchPool(denomPrice float64, pool pools.Pool, infoChannel chan PoolInfo, w
 	tokenBalance := getBalanceOfAddress(pool.TokenAddress, pool.PoolAddress, web3)
 	denominatorBalance := getBalanceOfAddress(pool.DenominatorAddress, pool.PoolAddress, web3)
 	currentPrice := getTokenPrice(pool, denomPrice, web3)
-	refP := &pool
-	refP.LastPrice = currentPrice
+	pool.LastPrice = currentPrice //update price in memory
 
 	infoChannel <- PoolInfo{
 		Token:       tokenBalance,
@@ -144,7 +144,7 @@ func initializeContract(abi string, address string, web3 *web3.Web3) (*eth.Contr
 * (sqrtRatioX96 ** 2) / (2 ** 192)= price
 * so price in $ would be price = denominatorPriceInUSD * (sqrtRatioX96 ** 2) / (2 ** 192)
  */
-func getTokenPrice(pool pools.Pool, denomPrice float64, web3 *web3.Web3) float64 {
+func getTokenPrice(pool *pools.Pool, denomPrice float64, web3 *web3.Web3) float64 {
 	contract, err := initializeContract(pool.PoolAbi, pool.PoolAddress, web3)
 	if err != nil {
 		fmt.Println("Cannot create contract", err)
