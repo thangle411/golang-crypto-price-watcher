@@ -7,3 +7,8 @@ Setup .env in the below format if you don't want to manually provide inputs for 
 - GMAIL_RECEIVER_EMAIL=**your receiver email goes here**
 - GMAIL_APP_PASSWORD=**your app password goes here**
 - GMAIL_FROM_EMAIL=**your sender email goes here**
+
+- TODO:
+  - Add support for uniswap v2 pools
+  - Add support for traderjoe pools
+  - Figure out how to calculate price for pools with USDC as denominator
