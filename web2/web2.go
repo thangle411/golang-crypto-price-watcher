@@ -39,15 +39,14 @@ var Tickers = []StockData{
 			}
 			sendEmail := false
 			percent := (current - last) / last * 100
-			if last < 90 && current > 90 {
-				sendEmail = true
-			} else if last < 100 && current > 100 {
-				sendEmail = true
-			} else if last < 110 && current > 110 {
-				sendEmail = true
-			} else if last < 120 && current > 120 {
-				sendEmail = true
-			} else if percent > 1 {
+			thresholds := []float64{90, 100, 110, 120, 125, 130}
+			for _, threshold := range thresholds {
+				if last < threshold && current > threshold {
+					sendEmail = true
+					break
+				}
+			}
+			if percent > 1 {
 				sendEmail = true
 			}
 			return sendEmail

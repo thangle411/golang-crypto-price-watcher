@@ -36,13 +36,14 @@ var Pools = []Pool{
 			}
 			sendEmail := false
 			percent := (current - last) / last * 100
-			if last < 15 && current > 15 {
-				sendEmail = true
-			} else if last < 25 && current > 25 {
-				sendEmail = true
-			} else if last < 35 && current > 35 {
-				sendEmail = true
-			} else if percent > 2.5 {
+			thresholds := []float64{15, 20, 25, 30, 35}
+			for _, threshold := range thresholds {
+				if last < threshold && current > threshold {
+					sendEmail = true
+					break
+				}
+			}
+			if percent > 2.5 {
 				sendEmail = true
 			}
 			return sendEmail
@@ -65,15 +66,14 @@ var Pools = []Pool{
 			}
 			sendEmail := false
 			percent := (current - last) / last * 100
-			if last < 1000 && current > 1000 {
-				sendEmail = true
-			} else if last < 1100 && current > 1100 {
-				sendEmail = true
-			} else if last < 1200 && current > 1200 {
-				sendEmail = true
-			} else if last < 1300 && current > 1300 {
-				sendEmail = true
-			} else if percent > 2.5 {
+			thresholds := []float64{1000, 1100, 1200, 1300, 1400, 1500}
+			for _, threshold := range thresholds {
+				if last < threshold && current > threshold {
+					sendEmail = true
+					break
+				}
+			}
+			if percent > 2.5 {
 				sendEmail = true
 			}
 			return sendEmail
@@ -96,13 +96,14 @@ var Pools = []Pool{
 			}
 			sendEmail := false
 			percent := (current - last) / last * 100
-			if last < 15 && current > 15 {
-				sendEmail = true
-			} else if last < 25 && current > 25 {
-				sendEmail = true
-			} else if last < 35 && current > 35 {
-				sendEmail = true
-			} else if percent > 2.5 {
+			thresholds := []float64{15, 25, 35}
+			for _, threshold := range thresholds {
+				if last < threshold && current > threshold {
+					sendEmail = true
+					break
+				}
+			}
+			if percent > 2.5 {
 				sendEmail = true
 			}
 			return sendEmail
