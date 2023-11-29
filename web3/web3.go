@@ -57,9 +57,9 @@ func Start(receiverEmail string, senderEmail string, appPassword string) (html s
 	for i := 0; i < len(pools.Pools); i++ {
 		pool := &pools.Pools[i]
 		var denomPrice float64
-		if pool.DenominatorName == "WETH" {
+		if pool.Denominator.Symbol == "WETH" {
 			denomPrice = ethPrice["ethereum"].Usd
-		} else if pool.DenominatorName == "USDC" {
+		} else if pool.Denominator.Symbol == "USDC" {
 			denomPrice = 1
 		}
 		wg.Add(1)
@@ -91,7 +91,7 @@ func Start(receiverEmail string, senderEmail string, appPassword string) (html s
 
 func watchPool(denomPrice float64, pool *pools.Pool, infoChannel chan PoolInfo, wg *sync.WaitGroup) {
 	defer wg.Done()
-	web3, err := web3.NewWeb3(pool.RPC)
+	web3, err := web3.NewWeb3(constants.RpcMap[pool.ChainID])
 	if err != nil {
 		fmt.Println("Cannot initialize a web3 instance - sending placeholder data")
 		zeroVal := Token{
@@ -108,8 +108,8 @@ func watchPool(denomPrice float64, pool *pools.Pool, infoChannel chan PoolInfo, 
 	web3.Eth.SetChainId(pool.ChainID)
 	lastPrice := pool.LastPrice
 	tokenBalance := getBalanceOfAddress(pool.TokenAddress, pool.PoolAddress, web3)
-	denominatorBalance := getBalanceOfAddress(pool.DenominatorAddress, pool.PoolAddress, web3)
-	currentPrice := getTokenPrice(pool, denomPrice, web3)
+	denominatorBalance := getBalanceOfAddress(pool.Denominator.Address, pool.PoolAddress, web3)
+	currentPrice := getTokenPrice(tokenBalance, denominatorBalance, denomPrice, pool, web3)
 	pool.LastPrice = currentPrice //update price in memory
 
 	infoChannel <- PoolInfo{
@@ -126,22 +126,42 @@ func initializeContract(abi string, address string, web3 *web3.Web3) (*eth.Contr
 	return contract, err
 }
 
+func getTokenPrice(tokenBalance Token, denominatorBalance Token, denomPrice float64, pool *pools.Pool, web3 *web3.Web3) float64 {
+	if pool.DexType == pools.UNIV3 || pool.DexType == pools.CAMV3 {
+		return getTokenPriceV3(pool, denomPrice, web3)
+	} else if pool.DexType == pools.UNIV2 {
+		return getTokenPriceV2(tokenBalance, denominatorBalance, denomPrice)
+	}
+
+	return 0
+}
+
+func getTokenPriceV2(tokenBalance Token, denominatorBalance Token, denomPrice float64) float64 {
+	if denominatorBalance.Name == "WETH" {
+		return (denomPrice * denominatorBalance.Balance) / tokenBalance.Balance
+	} else if denominatorBalance.Name == "USDC" {
+		return denominatorBalance.Balance / tokenBalance.Balance
+	}
+
+	return 0
+}
+
 /**
 * Equation to calculate token price, the price below is denominated in ETH or USDC or other stablesy
 * sqrtRatioX96 can be queried from the pool contract
 * (sqrtRatioX96 ** 2) / (2 ** 192)= price
 * so price in $ would be price = denominatorPriceInUSD * (sqrtRatioX96 ** 2) / (2 ** 192)
  */
-func getTokenPrice(pool *pools.Pool, denomPrice float64, web3 *web3.Web3) float64 {
-	contract, err := initializeContract(pool.PoolAbi, pool.PoolAddress, web3)
+func getTokenPriceV3(pool *pools.Pool, denomPrice float64, web3 *web3.Web3) float64 {
+	contract, err := initializeContract(pools.ABIMap[pool.DexType].Abi, pool.PoolAddress, web3)
 	if err != nil {
 		fmt.Println("Cannot create contract", err)
 		return 0.00
 	}
 
-	slot0, err := contract.Call(pool.StateMethod)
+	slot0, err := contract.Call(pools.ABIMap[pool.DexType].Method)
 	if err != nil {
-		fmt.Println("Cannot get "+pool.StateMethod, err)
+		fmt.Println("Cannot get "+pools.ABIMap[pool.DexType].Method, err)
 		return 0.00
 	}
 
@@ -179,7 +199,7 @@ func getBalanceOfAddress[T Token](contractAddress string, walletAddress string, 
 		return zeroVal
 	}
 
-	name, err := contract.Call("name")
+	name, err := contract.Call("symbol")
 	if err != nil {
 		fmt.Println("Cannot get Name")
 		return zeroVal

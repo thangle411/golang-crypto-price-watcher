@@ -9,6 +9,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/thangle411/golang-web3-price-watcher/jsonHelper"
+	"github.com/thangle411/golang-web3-price-watcher/utils"
 )
 
 type Response struct {
@@ -34,22 +35,7 @@ var Tickers = []StockData{
 		Symbol:    "COIN",
 		LastPrice: 0,
 		PriceDelta: func(last float64, current float64) bool {
-			if last == 0 {
-				return false
-			}
-			sendEmail := false
-			percent := (current - last) / last * 100
-			thresholds := []float64{90, 100, 110, 120, 125, 130}
-			for _, threshold := range thresholds {
-				if last < threshold && current > threshold {
-					sendEmail = true
-					break
-				}
-			}
-			if percent > 1 {
-				sendEmail = true
-			}
-			return sendEmail
+			return utils.ShouldNotify(last, current, 70, 150, 5, 1.5)
 		},
 	},
 }
